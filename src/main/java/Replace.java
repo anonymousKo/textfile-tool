@@ -1,5 +1,3 @@
-import java.io.IOException;
-
 public class Replace {
     public static void main(String[] args) {
         String path ="D:\\test";

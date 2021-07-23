@@ -1,4 +1,8 @@
 import cn.hutool.core.io.FileUtil;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.data.MutableDataSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
@@ -9,17 +13,35 @@ import java.util.Objects;
 
 @Slf4j
 public class FileOperationUtil {
-    public  void replace(String path,String oldStr,String newStr) {
-        List<File> FileList = new ArrayList<>();
-        if (fileCheck(path)) {
-            FileList = new ArrayList<>(FileUtil.loopFiles(path, file1 -> {
-                return !(file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
-            })
-            );
-        }
+    List<File> FileList = new ArrayList<>();
+    public  void replace(String path, String oldStr, String newStr) {
+        FileList = getFiles(path,file1 -> {
+            return !(file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
+        });
         log.info("find files: {}",FileList);
-        for (File file : FileList) {
-            replaceByLine(file, oldStr, newStr);
+        FileList.forEach(file -> replaceByLine(file, oldStr, newStr));
+    }
+    public  void BatchMdToHtml(String path) {
+        FileList = getFiles(path,file1 -> {
+            return (file1.getPath().toLowerCase().contains(".md") && ! file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
+        });
+        log.info("find files: {}",FileList);
+        FileList.forEach(file -> {
+            try {
+                mdToHtml(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+
+    private List<File> getFiles(String path,FileFilter fileFilter){
+        if (fileCheck(path)) {
+            return  new ArrayList<>(FileUtil.loopFiles(path,fileFilter));
+        }
+        else {
+            return null;
         }
     }
 
@@ -65,5 +87,23 @@ public class FileOperationUtil {
         destPath = srcPath.replace(fileName,destName);
         FileUtils.copyFile(srcFile, new File(destPath));
         log.info("Change the file: {}, create the bakFile : {}",srcPath,destPath);
+    }
+
+    public void mdToHtml(File file) throws IOException {
+        String md = FileUtils.readFileToString(file, "utf-8");
+        String srcPath = file.getPath();
+        File htmlFile = new File(srcPath.substring(0,srcPath.lastIndexOf("\\")) +
+                "\\0html\\" + file.getName().replace(".md",".html"));
+        MutableDataSet options = new MutableDataSet();
+        Parser parser = Parser.builder(options).build();
+        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+
+        // You can re-use parser and renderer instances
+        Node document = parser.parse(md);
+        String htmlText = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
+        FileUtils.writeStringToFile(htmlFile,htmlText,"utf-8");
+        log.info("convert file {} success",htmlFile);
+
+
     }
 }

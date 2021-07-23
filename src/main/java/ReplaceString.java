@@ -1,4 +1,4 @@
-public class Replace {
+public class ReplaceString {
     public static void main(String[] args) {
         String path ="D:\\test";
         String oldStr = "2";

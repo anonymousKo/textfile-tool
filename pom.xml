@@ -17,7 +17,7 @@
    <dependencies>
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
+            <artifactId>hutool-core</artifactId>
             <version>5.6.5</version>
         </dependency>
        <dependency>
@@ -42,8 +42,8 @@
 
        <dependency>
            <groupId>com.vladsch.flexmark</groupId>
-           <artifactId>flexmark-all</artifactId>
-           <version>0.50.42</version>
+           <artifactId>flexmark</artifactId>
+           <version>0.62.2</version>
        </dependency>
 
 

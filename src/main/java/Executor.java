@@ -12,9 +12,7 @@ public class Executor {
             if (args.length != 1){
                 throw new Exception("No input param");
             }
-            if (Integer.parseInt(args[0]) != 2 && Integer.parseInt(args[0]) != 1) {
-                log.info("InvalidOperationNum !");
-            } else if (Integer.parseInt(args[0]) == 1) {
+            if (args[0].equals(OperateType.MdToHtml.getCode())) {
                 log.info("Current path :{}", filePath);
                 Scanner s = new Scanner(System.in);
                 String oldStr = null;
@@ -29,10 +27,12 @@ public class Executor {
                 }
                 FileOperationUtil fileOperationUtil = new FileOperationUtil();
                 fileOperationUtil.replace(filePath, oldStr, newStr);
-            } else if (Integer.parseInt(args[0]) == 2) {
+            } else if (args[0].equals(OperateType.Replace.getCode())) {
                 log.info("Current path :{}", filePath);
                 FileOperationUtil fileOperationUtil = new FileOperationUtil();
                 fileOperationUtil.BatchMdToHtml(filePath);
+            } else {
+                throw new Exception("Invalid operateType");
             }
         } catch (Exception e) {
             log.error(String.valueOf(e));

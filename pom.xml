@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me.kesx</groupId>
-    <artifactId>EditTextfile</artifactId>
+    <artifactId>TextfileTool</artifactId>
     <version>1.0-SNAPSHOT</version>
 
 
@@ -52,5 +52,25 @@
    </dependencies>
 
 
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <finalName>${project.artifactId}-${project.version}</finalName>
+                    <layout>ZIP</layout>
+                    <mainClass>com.ke.clipboard.ClipboardApp</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

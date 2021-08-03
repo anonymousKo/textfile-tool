@@ -1,4 +1,4 @@
-package com.ke.textfiletool.service;
+package com.ke.textfiletool.util;
 
 import cn.hutool.core.io.FileUtil;
 import com.vladsch.flexmark.html.HtmlRenderer;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-public class FileOperationServiceImpl {
+public class FileOperationUtil {
     public List<File> getFiles(String path, FileFilter fileFilter) {
         if (fileCheck(path)) {
             return new ArrayList<>(FileUtil.loopFiles(path, fileFilter));
@@ -95,6 +95,11 @@ public class FileOperationServiceImpl {
         try {
             PDDocument pddDocument = PDDocument.load(file);
             String documentName = file.getName();
+            boolean bol = false;
+            if(pddDocument.isEncrypted()){
+                pddDocument.close();
+                throw new Exception("the file " + documentName + " is encrypted");
+            }
             for (int i = 0; i < pddDocument.getNumberOfPages(); i++) {
                 int pageNum = i + 1;
                 PDPage page = (PDPage) pddDocument.getPage(i);
@@ -120,11 +125,15 @@ public class FileOperationServiceImpl {
                 stripper.extractRegions(page);
                 if (pdfAnnot.getColor() != null) {
                     write((pageNum) + " - " + stripper.getTextForRegion(Integer.toString(0)) + "\n", documentName);
+                    bol = true;
                 }
             }
+            if (bol){
+                log.info("extract file 《{}》 success",documentName);
+            }
             pddDocument.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.info(String.valueOf(e));
         }
     }
 

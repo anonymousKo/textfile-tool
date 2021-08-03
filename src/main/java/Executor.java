@@ -7,13 +7,14 @@ import java.util.Scanner;
 public class Executor {
     public static void main(String[] args) {
         String path = System.getProperty("user.dir");
-        String filePath = path.substring(0,path.lastIndexOf("\\"));
+        String parentPath = path.substring(0,path.lastIndexOf("\\"));
+        FileOperationUtil fileOperationUtil = new FileOperationUtil();
         try {
             if (args.length != 1){
                 throw new Exception("No input param");
             }
-            if (args[0].equals(OperateType.MdToHtml.getCode())) {
-                log.info("Current path :{}", filePath);
+            if (args[0].equals(OperateType.Replace.getCode())) {
+                log.info("Current path :{}", parentPath);
                 Scanner s = new Scanner(System.in);
                 String oldStr = null;
                 String newStr = "";
@@ -25,12 +26,12 @@ public class Executor {
                 if(s.hasNextLine()){
                     newStr = s.nextLine();
                 }
-                FileOperationUtil fileOperationUtil = new FileOperationUtil();
-                fileOperationUtil.replace(filePath, oldStr, newStr);
-            } else if (args[0].equals(OperateType.Replace.getCode())) {
-                log.info("Current path :{}", filePath);
-                FileOperationUtil fileOperationUtil = new FileOperationUtil();
-                fileOperationUtil.BatchMdToHtml(filePath);
+                fileOperationUtil.replace(parentPath, oldStr, newStr);
+            } else if (args[0].equals(OperateType.MdToHtml.getCode())) {
+                log.info("Current path :{}", parentPath);
+                fileOperationUtil.BatchMdToHtml(parentPath);
+            }else if (args[0].equals(OperateType.PdfExtract.getCode())){
+                fileOperationUtil.ExtractPdfHighlight(path);
             } else {
                 throw new Exception("Invalid operateType");
             }

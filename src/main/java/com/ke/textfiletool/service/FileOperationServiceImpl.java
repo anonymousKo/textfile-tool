@@ -1,3 +1,5 @@
+package com.ke.textfiletool.service;
+
 import cn.hutool.core.io.FileUtil;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
@@ -18,41 +20,8 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-public class FileOperationUtil {
-    List<File> FileList = new ArrayList<>();
-
-    public void replace(String path, String oldStr, String newStr) {
-        FileList = getFiles(path, file1 -> {
-            return (file1.getPath().toLowerCase().contains(".md") && !file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
-        });
-        log.info("find files: {}", FileList);
-        FileList.forEach(file -> replaceByLine(file, oldStr, newStr));
-    }
-
-    public void BatchMdToHtml(String path) {
-        FileList = getFiles(path, file1 -> {
-            return (file1.getPath().toLowerCase().contains(".md") && !file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
-        });
-        log.info("find files: {}", FileList);
-        FileList.forEach(file -> {
-            try {
-                mdToHtml(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    public void ExtractPdfHighlight(String path) {
-        FileList = getFiles(path, file1 -> {
-            return (file1.getPath().toLowerCase().contains(".pdf"));        //ignore the backup files
-        });
-        log.info("find files: {}", FileList);
-        FileList.forEach(file -> extractHighlight(file));
-    }
-
-
-    private List<File> getFiles(String path, FileFilter fileFilter) {
+public class FileOperationServiceImpl {
+    public List<File> getFiles(String path, FileFilter fileFilter) {
         if (fileCheck(path)) {
             return new ArrayList<>(FileUtil.loopFiles(path, fileFilter));
         } else {
@@ -68,7 +37,7 @@ public class FileOperationUtil {
         return false;
     }
 
-    private void replaceByLine(File file, String oldstr, String newstr) {
+    public void replaceByLine(File file, String oldstr, String newstr) {
         List<String> list;
         boolean isChange = false;
         try {
@@ -122,7 +91,7 @@ public class FileOperationUtil {
         log.info("convert file {} success", htmlFile);
     }
 
-    private void extractHighlight(File file) {
+    public void extractHighlight(File file) {
         try {
             PDDocument pddDocument = PDDocument.load(file);
             String documentName = file.getName();

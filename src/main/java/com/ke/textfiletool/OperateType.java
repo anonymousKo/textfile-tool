@@ -1,3 +1,5 @@
+package com.ke.textfiletool;
+
 public enum OperateType {
     MdToHtml("1"),
     Replace("2"),

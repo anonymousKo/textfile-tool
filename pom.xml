@@ -71,7 +71,7 @@
                 <configuration>
                     <finalName>${project.artifactId}-${project.version}</finalName>
                     <layout>ZIP</layout>
-                    <mainClass>Executor</mainClass>
+                    <mainClass>com.ke.textfiletool.Executor</mainClass>
                 </configuration>
                 <executions>
                     <execution>

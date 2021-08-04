@@ -19,18 +19,8 @@ public class Executor {
             if (args[0].equals(OperateType.Replace.getCode())) {
                 ReplaceController replaceController =new ReplaceController();
                 log.info("Current path :{}", parentPath);
-                Scanner s = new Scanner(System.in);
-                String oldStr = null;
-                String newStr = "";
-                System.out.print("input the oldStr: ");
-                if(s.hasNext()){
-                    oldStr = s.nextLine();
-                }
-                System.out.print("input the newStr: ");
-                if(s.hasNextLine()){
-                    newStr = s.nextLine();
-                }
-                replaceController.replace(parentPath, oldStr, newStr);
+
+                replaceController.replace(parentPath);
             } else if (args[0].equals(OperateType.MdToHtml.getCode())) {
                 ConvertController convertController =new ConvertController();
                 log.info("Current path :{}", parentPath);

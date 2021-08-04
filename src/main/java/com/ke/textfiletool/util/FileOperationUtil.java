@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationTextMarkup;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import java.awt.geom.Rectangle2D;
@@ -18,6 +19,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public class FileOperationUtil {
@@ -91,45 +93,65 @@ public class FileOperationUtil {
         log.info("convert file {} success", htmlFile);
     }
 
-    public void extractHighlight(File file) {
+    public void extractHighlight(File file)  {
+        String documentName;
         try {
             PDDocument pddDocument = PDDocument.load(file);
-            String documentName = file.getName();
-            boolean bol = false;
+            documentName = file.getName();
             if(pddDocument.isEncrypted()){
                 pddDocument.close();
                 throw new Exception("the file " + documentName + " is encrypted");
             }
             for (int i = 0; i < pddDocument.getNumberOfPages(); i++) {
+//               PDPage page =pddDocument.getPage(i);
+//               List<PDAnnotation> la = page.getAnnotations();
+//               for (PDAnnotation anot : la) {
+//                   if (anot instanceof PDAnnotationTextMarkup && ((
+//                            anot.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_HIGHLIGHT))
+//                           || (anot.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_UNDERLINE))))
+//                       processHighlight((PDAnnotationTextMarkup) anot, page);
+//               }
+//               pddDocument.save("C:\\Users\\DELL\\OneDrive\\Textbook\\JavaScript DOM编程艺术.pdf.txt");
                 int pageNum = i + 1;
-                PDPage page = (PDPage) pddDocument.getPage(i);
-                List<PDAnnotation> la = page.getAnnotations();
-                if (la.size() < 1) {
+                PDPage page = pddDocument.getPage(i);
+                List<PDAnnotation> pdAnnotationList = page.getAnnotations();
+
+                if (pdAnnotationList.isEmpty()) {
                     continue;
                 }
-                PDAnnotation pdfAnnot = la.get(0);
-                PDFTextStripperByArea stripper = new PDFTextStripperByArea();
-                stripper.setSortByPosition(true);
-                PDRectangle rect = pdfAnnot.getRectangle();
-                float x = rect.getLowerLeftX() - 1;
-                float y = rect.getUpperRightY() - 1;
-                float width = rect.getWidth() + 2;
-                float height = rect.getHeight() + rect.getHeight() / 4;
-                int rotation = page.getRotation();
-                if (rotation == 0) {
-                    PDRectangle pageSize = page.getMediaBox();
-                    y = pageSize.getHeight() - y;
+                boolean hasWirtePage = false;
+                for (PDAnnotation pdAnnotation : pdAnnotationList) {
+                    if (pdAnnotation instanceof PDAnnotationTextMarkup && ((
+                            pdAnnotation.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_HIGHLIGHT))
+                            || (pdAnnotation.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_UNDERLINE)))) {
+                        if (! hasWirtePage) {
+                            write(pageNum + " ",documentName);
+                            hasWirtePage = true;
+                        }
+                        PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+
+                        stripper.setSortByPosition(true);
+                        PDRectangle rect = pdAnnotation.getRectangle();
+                        float x = rect.getLowerLeftX() - 1;
+                        float y = rect.getUpperRightY() - 1;
+                        float width = rect.getWidth() + 2;
+                        float height = rect.getHeight() + rect.getHeight() / 4;
+                        int rotation = page.getRotation();
+                        if (rotation == 0) {
+                            PDRectangle pageSize = page.getMediaBox();
+                            y = pageSize.getHeight() - y;
+                        }
+                        Rectangle2D.Float awtRect = new Rectangle2D.Float(x, y, width, height);
+                        stripper.addRegion(Integer.toString(i), awtRect);
+                        stripper.extractRegions(page);
+                        Optional<String> content = Optional.ofNullable(pdAnnotation.getContents());
+                        for (String region : stripper.getRegions()) {
+                            String highLight = stripper.getTextForRegion(region) + content.orElse("");
+                            write(highLight + "\n",documentName);
+                        }
+                    }
+
                 }
-                Rectangle2D.Float awtRect = new Rectangle2D.Float(x, y, width, height);
-                stripper.addRegion(Integer.toString(0), awtRect);
-                stripper.extractRegions(page);
-                if (pdfAnnot.getColor() != null) {
-                    write((pageNum) + " - " + stripper.getTextForRegion(Integer.toString(0)) + "\n", documentName);
-                    bol = true;
-                }
-            }
-            if (bol){
-                log.info("extract file 《{}》 success",documentName);
             }
             pddDocument.close();
         } catch (Exception e) {
@@ -138,7 +160,7 @@ public class FileOperationUtil {
     }
 
     public static void write(String message,String documentName) throws IOException {
-        PrintWriter out = new PrintWriter(new FileWriter(documentName + ".txt", true), true);
+        PrintWriter out = new PrintWriter(new FileWriter(documentName+".txt",true), true);
         out.write(message);
         out.close();
     }

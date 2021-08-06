@@ -12,14 +12,14 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationTextMarkup;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import java.awt.geom.Rectangle2D;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Slf4j
 public class FileOperationUtil {
@@ -79,9 +79,8 @@ public class FileOperationUtil {
 
     public void mdToHtml(File file) throws IOException {
         String md = FileUtils.readFileToString(file, "utf-8");
-        String srcPath = file.getPath();
-        File htmlFile = new File(srcPath.substring(0, srcPath.lastIndexOf("\\")) +
-                "\\0html\\" + file.getName().replace(".md", ".html"));
+        File htmlFile = new File(parseParentPath(file) +
+                "0html\\" + file.getName().replace(".md", ".html"));
         MutableDataSet options = new MutableDataSet();
         Parser parser = Parser.builder(options).build();
         HtmlRenderer renderer = HtmlRenderer.builder(options).build();
@@ -93,75 +92,106 @@ public class FileOperationUtil {
         log.info("convert file {} success", htmlFile);
     }
 
+    public String parseParentPath(File file){
+        String srcPath = file.getPath();
+        return srcPath.substring(0, srcPath.lastIndexOf("\\")) + "\\";
+    }
+
+
     public void extractHighlight(File file)  {
         String documentName;
+        StringBuilder wholeText = new StringBuilder("+++\n");
+        Map<Integer,String > indexToBookmarkMap = new LinkedHashMap<>();
+        boolean hasAnnotation = false;
         try {
             PDDocument pddDocument = PDDocument.load(file);
             documentName = file.getName();
             if(pddDocument.isEncrypted()){
                 pddDocument.close();
-                throw new Exception("the file " + documentName + " is encrypted");
+                throw new SecurityException("the file " + documentName + " is encrypted");
             }
+            mapBookmarks(pddDocument,indexToBookmarkMap);
             for (int i = 0; i < pddDocument.getNumberOfPages(); i++) {
-//               PDPage page =pddDocument.getPage(i);
-//               List<PDAnnotation> la = page.getAnnotations();
-//               for (PDAnnotation anot : la) {
-//                   if (anot instanceof PDAnnotationTextMarkup && ((
-//                            anot.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_HIGHLIGHT))
-//                           || (anot.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_UNDERLINE))))
-//                       processHighlight((PDAnnotationTextMarkup) anot, page);
-//               }
-//               pddDocument.save("C:\\Users\\DELL\\OneDrive\\Textbook\\JavaScript DOM编程艺术.pdf.txt");
                 int pageNum = i + 1;
                 PDPage page = pddDocument.getPage(i);
                 List<PDAnnotation> pdAnnotationList = page.getAnnotations();
-
                 if (pdAnnotationList.isEmpty()) {
                     continue;
                 }
-                boolean hasWirtePage = false;
                 for (PDAnnotation pdAnnotation : pdAnnotationList) {
+                    String bookmarkName = null;
                     if (pdAnnotation instanceof PDAnnotationTextMarkup && ((
                             pdAnnotation.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_HIGHLIGHT))
                             || (pdAnnotation.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_UNDERLINE)))) {
-                        if (! hasWirtePage) {
-                            write(pageNum + " ",documentName);
-                            hasWirtePage = true;
+                        hasAnnotation = true;
+                        for(Map.Entry<Integer,String> entry:indexToBookmarkMap.entrySet()){
+                            if (pageNum > entry.getKey()){
+                                bookmarkName = entry.getValue();
+                            }else {
+                                break;
+                            }
                         }
-                        PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+                        String highAndComment = renderHighlight(pdAnnotation,page);
+                        String formattedDate = "";
+                        if(pdAnnotation.getModifiedDate() != null){
+                            formattedDate=formatDate(pdAnnotation.getModifiedDate().substring(2,15));
+                        }
 
-                        stripper.setSortByPosition(true);
-                        PDRectangle rect = pdAnnotation.getRectangle();
-                        float x = rect.getLowerLeftX() - 1;
-                        float y = rect.getUpperRightY() - 1;
-                        float width = rect.getWidth() + 2;
-                        float height = rect.getHeight() + rect.getHeight() / 4;
-                        int rotation = page.getRotation();
-                        if (rotation == 0) {
-                            PDRectangle pageSize = page.getMediaBox();
-                            y = pageSize.getHeight() - y;
-                        }
-                        Rectangle2D.Float awtRect = new Rectangle2D.Float(x, y, width, height);
-                        stripper.addRegion(Integer.toString(i), awtRect);
-                        stripper.extractRegions(page);
-                        Optional<String> content = Optional.ofNullable(pdAnnotation.getContents());
-                        for (String region : stripper.getRegions()) {
-                            String highLight = stripper.getTextForRegion(region) + content.orElse("");
-                            write(highLight + "\n",documentName);
-                        }
+                        String exportIndex = "<div style=\"float:left\">" + pageNum +" " + bookmarkName + "</div>" +
+                                "<div style=\"float:right\">"+ formattedDate + "</div>";
+                        wholeText.append(exportIndex).append("\n").append("> ").append(highAndComment).append("+++").append("\n");
                     }
-
                 }
             }
+            File desFile = new File(parseParentPath(file) + file.getName().replace(".pdf","_note.md"));
+            if (hasAnnotation){
+                FileUtils.writeStringToFile(desFile, wholeText.toString(),"utf-8");
+                log.info("extract highlight success, write file to->{}",desFile);
+            }else {
+                log.info("no highlight find in file -> {}",documentName);
+            }
             pddDocument.close();
-        } catch (Exception e) {
+        }catch (SecurityException e){
             log.info(String.valueOf(e));
+        }
+        catch (Exception e) {
+            log.info("extract highlight error -> {}", e);
         }
     }
 
-    public static void write(String message,String documentName) throws IOException {
-        PrintWriter out = new PrintWriter(new FileWriter(documentName+".txt",true), true);
-        out.write(message);
-        out.close();
+    private String renderHighlight(PDAnnotation pdAnnotation,PDPage page) throws IOException {
+        PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+        stripper.setSortByPosition(true);
+        PDRectangle rect = pdAnnotation.getRectangle();
+        float x = rect.getLowerLeftX() - 1;
+        float y = rect.getUpperRightY() - 1;
+        float width = rect.getWidth() + 2;
+        float height = rect.getHeight() + rect.getHeight() / 4;
+        int rotation = page.getRotation();
+        if (rotation == 0) {
+            PDRectangle pageSize = page.getMediaBox();
+            y = pageSize.getHeight() - y;
+        }
+        Rectangle2D.Float awtRect = new Rectangle2D.Float(x, y, width, height);
+        stripper.addRegion(Integer.toString(1), awtRect);
+        stripper.extractRegions(page);
+        Optional<String> comment = Optional.ofNullable(pdAnnotation.getContents());
+        return stripper.getTextForRegion(String.valueOf(1)) +"\n"+ comment.orElse("")
+                + (comment.orElse("").isEmpty() ?"":"\n");
+    }
+    private void mapBookmarks(PDDocument pddDocument,Map<Integer,String> indexToBookmarkMap) throws IOException {
+        PDOutlineItem currentBookmark = pddDocument.getDocumentCatalog().getDocumentOutline().getFirstChild();
+        while (currentBookmark != null)
+        {
+            PDPage currentPage = currentBookmark.findDestinationPage(pddDocument);
+            Integer currentPageIndex = pddDocument.getPages().indexOf(currentPage);
+            indexToBookmarkMap.put(currentPageIndex,currentBookmark.getTitle());
+            currentBookmark = currentBookmark.getNextSibling();
+        }
+    }
+    public String formatDate(String originDate) throws ParseException {
+        Date date = new SimpleDateFormat("yyyyMMddHHmmss").parse(originDate);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM dd, yyyy",Locale.ENGLISH);
+        return simpleDateFormat.format(date);
     }
 }

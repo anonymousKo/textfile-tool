@@ -14,9 +14,11 @@ public class ExtractController {
 
     public void ExtractPdfHighlight(String path) {
         FileList = fileOperationUtil.getFiles(path, file1 -> {
-            return (file1.getPath().toLowerCase().contains(".pdf") && !file1.getPath().toLowerCase().contains(".pdf.txt"));        //ignore the backup files
+            //only find .pdf file
+            return (file1.getPath().toLowerCase().lastIndexOf(".pdf") == file1.getPath().length() - 4);
         });
-        log.info("find files: {}", FileList);
-        FileList.forEach(file -> fileOperationUtil.extractHighlight(file));
+        log.info("find pdf file -> {}", FileList);
+        FileList.forEach(file ->
+            fileOperationUtil.extractHighlight(file));
     }
 }

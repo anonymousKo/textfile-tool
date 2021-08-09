@@ -119,16 +119,18 @@ public class FileOperationUtil {
                     continue;
                 }
                 for (PDAnnotation pdAnnotation : pdAnnotationList) {
-                    String bookmarkName = null;
+                    String bookmarkName = "";
                     if (pdAnnotation instanceof PDAnnotationTextMarkup && ((
                             pdAnnotation.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_HIGHLIGHT))
                             || (pdAnnotation.getSubtype().equals(PDAnnotationTextMarkup.SUB_TYPE_UNDERLINE)))) {
                         hasAnnotation = true;
-                        for(Map.Entry<Integer,String> entry:indexToBookmarkMap.entrySet()){
-                            if (pageNum > entry.getKey()){
-                                bookmarkName = entry.getValue();
-                            }else {
-                                break;
+                        if (! indexToBookmarkMap.isEmpty()){
+                            for(Map.Entry<Integer,String> entry:indexToBookmarkMap.entrySet()){
+                                if (pageNum > entry.getKey()){
+                                    bookmarkName = entry.getValue();
+                                }else {
+                                    break;
+                                }
                             }
                         }
                         String highAndComment = renderHighlight(pdAnnotation,page);
@@ -179,14 +181,21 @@ public class FileOperationUtil {
         return stripper.getTextForRegion(String.valueOf(1)) +"\n"+ comment.orElse("")
                 + (comment.orElse("").isEmpty() ?"":"\n");
     }
-    private void mapBookmarks(PDDocument pddDocument,Map<Integer,String> indexToBookmarkMap) throws IOException {
+    private void mapBookmarks(PDDocument pddDocument,Map<Integer,String> indexToBookmarkMap){
+        try{
+
         PDOutlineItem currentBookmark = pddDocument.getDocumentCatalog().getDocumentOutline().getFirstChild();
-        while (currentBookmark != null)
-        {
+        while (currentBookmark != null) {
             PDPage currentPage = currentBookmark.findDestinationPage(pddDocument);
             Integer currentPageIndex = pddDocument.getPages().indexOf(currentPage);
-            indexToBookmarkMap.put(currentPageIndex,currentBookmark.getTitle());
+            indexToBookmarkMap.put(currentPageIndex, currentBookmark.getTitle());
             currentBookmark = currentBookmark.getNextSibling();
+        }
+        }catch (NullPointerException e){
+            log.error("cant resolve the catalog of pdf ->{}",pddDocument.getDocumentInformation().getTitle());
+        }
+        catch (Exception e){
+            e.printStackTrace();
         }
     }
     public String formatDate(String originDate) throws ParseException {

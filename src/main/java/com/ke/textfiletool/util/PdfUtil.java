@@ -121,4 +121,19 @@ public class PdfUtil {
             e.printStackTrace();
         }
     }
+    public void removeEncryption(File file) {
+        try {
+            PDDocument pdDocument = PDDocument.load(file);
+            if( pdDocument.isEncrypted() )
+            {
+                pdDocument.setAllSecurityToBeRemoved(true);
+                String saveFile = fileOperationUtil.parseParentPath(file) + file.getName().replace(".pdf","_unlock.pdf");
+                pdDocument.save(saveFile);
+                log.info("save  the unlock file-> {}",saveFile);
+            }
+            pdDocument.close();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

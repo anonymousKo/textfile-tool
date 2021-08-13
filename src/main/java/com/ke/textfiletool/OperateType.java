@@ -3,7 +3,8 @@ package com.ke.textfiletool;
 public enum OperateType {
     MdToHtml("1"),
     Replace("2"),
-    PdfExtract("3");
+    PdfExtract("3"),
+    PdfUnlock("4");
     private String code;
     OperateType(String code){
         this.code = code;

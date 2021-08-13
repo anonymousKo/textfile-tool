@@ -1,11 +1,9 @@
 package com.ke.textfiletool;
 
 import com.ke.textfiletool.controller.ConvertController;
-import com.ke.textfiletool.controller.ExtractController;
+import com.ke.textfiletool.controller.PdfController;
 import com.ke.textfiletool.controller.ReplaceController;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Scanner;
 
 @Slf4j
 public class Executor {
@@ -19,7 +17,6 @@ public class Executor {
             if (args[0].equals(OperateType.Replace.getCode())) {
                 ReplaceController replaceController =new ReplaceController();
                 log.info("Current path :{}", parentPath);
-
                 replaceController.replace(parentPath);
             } else if (args[0].equals(OperateType.MdToHtml.getCode())) {
                 ConvertController convertController =new ConvertController();
@@ -27,8 +24,12 @@ public class Executor {
                 convertController.BatchMdToHtml(parentPath);
             }else if (args[0].equals(OperateType.PdfExtract.getCode())){
                 log.info("Current path :{}", parentPath);
-                ExtractController extractController=new ExtractController();
-                extractController.ExtractPdfHighlight(parentPath);
+                PdfController pdfController =new PdfController();
+                pdfController.extractPdfHighlight(parentPath);
+            }else if (args[0].equals(OperateType.PdfUnlock.getCode())){
+                log.info("Current path :{}", parentPath);
+                PdfController pdfController =new PdfController();
+                pdfController.removeEncryption(parentPath);
             } else {
                 throw new Exception("Invalid operateType");
             }

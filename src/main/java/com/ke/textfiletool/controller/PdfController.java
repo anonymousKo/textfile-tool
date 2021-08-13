@@ -22,7 +22,7 @@ public class PdfController {
         log.info("find pdf file -> {}", FileList);
     }
 
-    public void ExtractPdfHighlight(String path) {
+    public void extractPdfHighlight(String path) {
         findALlPdf(path);
         FileList.forEach(file ->
                 pdfUtil.extractHighlight(file));

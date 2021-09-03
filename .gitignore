@@ -1,0 +1,16 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+.idea
+*.iml
+target
+*dev.properties
+*provided.properties
+node_modules
+dist
+src/main/resources/static/static/css/app.2a601868757ca202b2196977fb9cde9f.css
+src/main/resources/static/static/css/app.2a601868757ca202b2196977fb9cde9f.css.map
+src/main/resources/static/static/js/app.80fc48170a5892574f96.js
+src/main/resources/static/static/js/app.80fc48170a5892574f96.js.map
+src/test/

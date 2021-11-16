@@ -10,15 +10,13 @@ import java.util.Scanner;
 
 @Slf4j
 public class ReplaceController {
-    FileOperationUtil fileOperationUtil =new FileOperationUtil();
     List<File> FileList = new ArrayList<>();
     String oldStr = null;
     String newStr = "";
 
     public void replace(String path) {
-        FileList = fileOperationUtil.getFiles(path, file1 -> {
-            return (file1.getPath().toLowerCase().contains(".md") && !file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
-        });
+        FileList = FileOperationUtil.findAllBySuffix(path, "md");
+        FileList.removeIf(file ->  file.getPath().toLowerCase().contains("_bak"));
         log.info("find files: {}", FileList);
         Scanner s = new Scanner(System.in);
         System.out.print("input the oldStr: ");
@@ -29,6 +27,6 @@ public class ReplaceController {
         if(s.hasNextLine()){
             newStr = s.nextLine();
         }
-        FileList.forEach(file -> fileOperationUtil.replaceByLine(file, oldStr, newStr));
+        FileList.forEach(file -> FileOperationUtil.replaceByLine(file, oldStr, newStr));
     }
 }

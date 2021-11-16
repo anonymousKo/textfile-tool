@@ -12,6 +12,7 @@ import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,7 +21,6 @@ import java.util.Optional;
 
 @Slf4j
 public class PdfUtil {
-    FileOperationUtil fileOperationUtil = new FileOperationUtil();
     public void extractHighlight(File file)  {
         String documentName;
         StringBuilder wholeText = new StringBuilder("+++\n");
@@ -59,7 +59,7 @@ public class PdfUtil {
                         String highAndComment = renderHighlight(pdAnnotation,page);
                         String formattedDate = "";
                         if(pdAnnotation.getModifiedDate() != null){
-                            formattedDate=fileOperationUtil.formatDate(pdAnnotation.getModifiedDate().substring(2,15));
+                            formattedDate=FileOperationUtil.formatDate(pdAnnotation.getModifiedDate().substring(2,15));
                         }
 
                         String exportIndex = "<div style=\"float:left\">" + pageNum +" " + bookmarkName + "</div>" +
@@ -68,7 +68,7 @@ public class PdfUtil {
                     }
                 }
             }
-            File desFile = new File(fileOperationUtil.parseParentPath(file) + file.getName().replace(".pdf","_note.md"));
+            File desFile = new File(FileOperationUtil.parseParentPath(file) + file.getName().replace(".pdf","_note.md"));
             if (hasAnnotation){
                 FileUtils.writeStringToFile(desFile, wholeText.toString(),"utf-8");
                 log.info("extract highlight success, write file to->{}",desFile);
@@ -127,7 +127,7 @@ public class PdfUtil {
             if( pdDocument.isEncrypted() )
             {
                 pdDocument.setAllSecurityToBeRemoved(true);
-                String saveFile = fileOperationUtil.parseParentPath(file) + file.getName().replace(".pdf","_unlock.pdf");
+                String saveFile = FileOperationUtil.parseParentPath(file) + file.getName().replace(".pdf","_unlock.pdf");
                 pdDocument.save(saveFile);
                 log.info("save  the unlock file-> {}",saveFile);
             }

@@ -7,20 +7,19 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ConvertController {
     List<File> FileList = new ArrayList<>();
-    FileOperationUtil fileOperationUtil =new FileOperationUtil();
 
     public void BatchMdToHtml(String path) {
-        FileList = fileOperationUtil.getFiles(path, file1 -> {
-            return (file1.getPath().toLowerCase().contains(".md") && !file1.getPath().toLowerCase().contains("_bak"));        //ignore the backup files
-        });
+        FileList = FileOperationUtil.findAllBySuffix(path, "md");
+        FileList.removeIf(file ->  file.getPath().toLowerCase().contains("_bak"));
         log.info("find files: {}", FileList);
         FileList.forEach(file -> {
             try {
-                fileOperationUtil.mdToHtml(file);
+                FileOperationUtil.mdToHtml(file);
             } catch (IOException e) {
                 e.printStackTrace();
             }

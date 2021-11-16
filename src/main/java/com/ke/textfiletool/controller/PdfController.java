@@ -11,24 +11,19 @@ import java.util.List;
 @Slf4j
 public class PdfController {
     List<File> FileList = new ArrayList<>();
-    FileOperationUtil fileOperationUtil =new FileOperationUtil();
     PdfUtil pdfUtil =new PdfUtil();
 
-    private void findALlPdf(String path){
-        FileList = fileOperationUtil.getFiles(path, file1 -> {
-            // only find .pdf file
-            return (file1.getPath().toLowerCase().lastIndexOf(".pdf") == file1.getPath().length() - 4);
-        });
-        log.info("find pdf file -> {}", FileList);
+    private void findAllPdf(String path){
+        FileList = FileOperationUtil.findAllBySuffix(path, "pdf");
     }
 
     public void extractPdfHighlight(String path) {
-        findALlPdf(path);
+        findAllPdf(path);
         FileList.forEach(file ->
                 pdfUtil.extractHighlight(file));
     }
     public void removeEncryption(String path){
-        findALlPdf(path);
+        findAllPdf(path);
         FileList.forEach(file ->
                 pdfUtil.removeEncryption(file));
     }

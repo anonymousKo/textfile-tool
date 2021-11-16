@@ -14,7 +14,7 @@ import java.util.*;
 
 @Slf4j
 public class FileOperationUtil {
-    public List<File> getFiles(String path, FileFilter fileFilter) {
+    public static List<File> getFiles(String path, FileFilter fileFilter) {
         if (fileCheck(path)) {
             return new ArrayList<>(FileUtil.loopFiles(path, fileFilter));
         } else {
@@ -22,7 +22,7 @@ public class FileOperationUtil {
         }
     }
 
-    private boolean fileCheck(String path) {
+    private static boolean fileCheck(String path) {
         File file = new File(path);
         if (file.isDirectory()) {
             return Objects.requireNonNull(file.listFiles()).length > 0;
@@ -30,7 +30,7 @@ public class FileOperationUtil {
         return false;
     }
 
-    public void replaceByLine(File file, String oldstr, String newstr) {
+    public static void replaceByLine(File file, String oldstr, String newstr) {
         List<String> list;
         boolean isChange = false;
         try {
@@ -53,7 +53,7 @@ public class FileOperationUtil {
         }
     }
 
-    private void backup(File srcFile) throws IOException {
+    private static void backup(File srcFile) throws IOException {
         String srcPath = srcFile.getPath();
         String destName, destPath;
         String fileName = srcFile.getName();
@@ -68,7 +68,7 @@ public class FileOperationUtil {
         log.info("Change the file: {}, create the bakFile : {}", srcPath, destPath);
     }
 
-    public void mdToHtml(File file) throws IOException {
+    public static void mdToHtml(File file) throws IOException {
         String md = FileUtils.readFileToString(file, "utf-8");
         File htmlFile = new File(parseParentPath(file) +
                 "0html\\" + file.getName().replace(".md", ".html"));
@@ -83,16 +83,26 @@ public class FileOperationUtil {
         log.info("convert file {} success", htmlFile);
     }
 
-    public String parseParentPath(File file){
+    public static String parseParentPath(File file){
         String srcPath = file.getPath();
         return srcPath.substring(0, srcPath.lastIndexOf("\\")) + "\\";
     }
 
 
 
-    public String formatDate(String originDate) throws ParseException {
+    public static String formatDate(String originDate) throws ParseException {
         Date date = new SimpleDateFormat("yyyyMMddHHmmss").parse(originDate);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM dd, yyyy",Locale.ENGLISH);
         return simpleDateFormat.format(date);
+    }
+
+    public static List<File> findAllBySuffix(String path, String suffix){
+        String extension = "." + suffix;
+        List<File> fileList = getFiles(path, file1 -> {
+            // only find .pdf file
+            return (file1.getPath().toLowerCase().lastIndexOf(extension) == file1.getPath().length() - extension.length());
+        });
+        log.info("find " + suffix + " file -> {}", fileList);
+        return fileList;
     }
 }
